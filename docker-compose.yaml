@@ -1,0 +1,52 @@
+version: "3"
+
+services:
+  # Database
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - wpsite
+  # phpmyadmin
+  phpmyadmin:
+    depends_on:
+      - db
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - wpsite
+  # Wordpress
+  wordpress:
+    depends_on:
+      - db
+    image: ceghap/wordpress_memcached:latest
+    ports:
+      - "8000:80"
+    restart: always
+    volumes: ["./:/var/www/html"]
+    links:
+      - memcached:memcached
+    env_file:
+      - .env
+    networks:
+      - wpsite
+  # Memcached
+  memcached:
+    depends_on:
+      - db
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+    networks:
+      - wpsite
+    restart: always
+networks:
+  wpsite:
+volumes:
+  db_data:
